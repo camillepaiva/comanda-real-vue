@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-// Certifique-se de que os caminhos de importação estão corretos para o seu projeto Vue
+
 import ProductForm from '@/components/painel/ProductForm.vue'
 import StoreSettings from '@/components/painel/StoreSettings.vue'
-import { getCardapio, saveCardapio } from '@/services/CardapioService'
+import { CardapioService } from '@/services/CardapioService'
 import type { Cardapio, Produto } from '@/types/global'
 import MenuDisplay from '../components/MenuDisplay.vue'
+
+const cardapioService = new CardapioService()
 
 // 1. Estado Reativo (ref)
 const activeTab = ref<'produtos' | 'loja'>('produtos')
@@ -34,7 +36,7 @@ onMounted(() => {
   const fetchInitialData = async () => {
     try {
       // Use o ID de loja fixo para carregar
-      const data = await getCardapio(cardapio.value.id)
+      const data = await cardapioService.getCardapio(cardapio.value.id)
       if (data) {
         cardapio.value = data
       } else {
@@ -83,8 +85,7 @@ const saveToFirestore = async () => {
   loading.value = true
   message.value = ''
   try {
-    // Salva o objeto cardapio atualizado
-    await saveCardapio(cardapio.value)
+    await cardapioService.salvarCardapio(cardapio.value)
     message.value = '✅ Alterações salvas com sucesso!'
   } catch (error) {
     console.error(error)

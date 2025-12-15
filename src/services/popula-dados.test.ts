@@ -1,0 +1,89 @@
+// src/services/seed.test.ts
+
+import { getApp, getApps, initializeApp } from 'firebase/app'
+import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore'
+import { beforeAll, describe, expect, it } from 'vitest'
+
+import { CardapioService } from './CardapioService'
+import { LojistaService } from './LojistaService'
+
+// -----------------------------------------------------
+// CONFIGURAÇÃO DO AMBIENTE (Crucial para o Vitest)
+// -----------------------------------------------------
+
+// O ID Fixo que usaremos para o Lojista de Teste
+const TEST_LOJISTA_ID = 'TESTE_DEV_LOJA'
+
+// Dados iniciais (os mesmos que você usaria no seu script)
+const INITIAL_LOJISTA_DATA = {
+  nomeLoja: 'Lanchonete Dev - Cardápio Local',
+  whatsapp: '5511999999999',
+  fotoUrl: 'https://images.unsplash.com/photo-1517248135466-4c7819389e8b',
+}
+
+// Configurações Mock (Não precisam ser reais, apenas para inicializar o app)
+const MOCK_FIREBASE_CONFIG = {
+  apiKey: 'fake-key',
+  authDomain: 'fake-project.firebaseapp.com',
+  projectId: 'fake-project',
+  storageBucket: 'fake-project.appspot.com',
+  messagingSenderId: 'fake-id',
+  appId: 'fake-app-id',
+}
+
+// Inicializa e conecta ao Emulator ANTES de todos os testes neste arquivo
+beforeAll(() => {
+  console.log('[SEED TEST] Conectando ao Firebase Emulator na porta 8080...')
+
+  // 1. APLICAÇÃO DO PADRÃO SINGLETON AQUI:
+  // Se já existir um app, usa o existente. Caso contrário, inicializa com o mock.
+  const app = getApps().length > 0 ? getApp() : initializeApp(MOCK_FIREBASE_CONFIG)
+
+  // 2. Conecta o Firestore ao Emulator (Porta padrão: 8080)
+  const db = getFirestore(app)
+  connectFirestoreEmulator(db, 'localhost', 8080)
+
+  // Nota: Se sua `firebaseConfig.ts` já estiver configurada para usar
+  // o emulador em ambiente 'development' (conforme a nossa conversa anterior),
+  // você pode apenas garantir que o Vitest rode em modo 'development'.
+
+  // Vamos assumir que estamos garantindo a conexão aqui para este teste.
+})
+
+// -----------------------------------------------------
+// TESTE DE POPULAÇÃO
+// -----------------------------------------------------
+
+describe('SEED DATA: População Inicial no Firebase Emulator', () => {
+  const lojistaService = new LojistaService()
+  const cardapioService = new CardapioService()
+
+  it('deve criar ou atualizar o lojista de teste e popular o cardápio', async () => {
+    // 1. Verificar/Criar Lojista
+    let lojista = await lojistaService.getLojista(TEST_LOJISTA_ID)
+
+    if (!lojista) {
+      console.log(`[SEED] Criando lojista ${TEST_LOJISTA_ID}...`)
+    } else {
+      console.log(`[SEED] Lojista ${TEST_LOJISTA_ID} existente. Atualizando metadados.`)
+    }
+
+    // Usa atualizarLojista para garantir o UPSERT (criação ou atualização) com ID fixo.
+    await lojistaService.atualizarLojista(TEST_LOJISTA_ID, INITIAL_LOJISTA_DATA)
+
+    lojista = await lojistaService.getLojista(TEST_LOJISTA_ID)
+    expect(lojista).not.toBeNull()
+    expect(lojista?.nomeLoja).toBe(INITIAL_LOJISTA_DATA.nomeLoja)
+
+    // 2. Popular Cardápio
+    console.log(`[SEED] Popuando cardápio 'principal' com dados de teste.`)
+    await cardapioService.loadTestCardapio(TEST_LOJISTA_ID)
+
+    // 3. Verificação Final
+    const cardapio = await cardapioService.getCardapio(TEST_LOJISTA_ID)
+
+    expect(cardapio).not.toBeNull()
+    expect(cardapio?.produtos.length).toBeGreaterThan(0) // Garante que produtos foram inseridos
+    console.log(`[SEED] População concluída com sucesso para ID: ${TEST_LOJISTA_ID}`)
+  }, 10000) // Aumentamos o timeout para 10s caso a conexão demore
+})

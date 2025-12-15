@@ -1,6 +1,7 @@
 import { getApp, getApps, initializeApp } from 'firebase/app'
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore' // Importe connectFirestoreEmulator
 
+import { isDevelopment } from '@/utils/Utils'
 // 1. Defina a configuração
 const firebaseConfig = {
   // Use import.meta.env e o prefixo VITE_
@@ -16,11 +17,6 @@ const firebaseConfig = {
 // 2. Inicialize o App (Singleton pattern)
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
 const db = getFirestore(app)
-
-// 3. Lógica para usar o Emulador (Ambiente de Desenvolvimento)
-// O Vite expõe o modo de ambiente em import.meta.env.MODE.
-// No desenvolvimento local (ex: 'npm run dev'), o MODE geralmente é 'development'.
-const isDevelopment = import.meta.env.MODE === 'development'
 
 if (isDevelopment) {
   // Verifique se o Emulador está disponível e conecte-se a ele.

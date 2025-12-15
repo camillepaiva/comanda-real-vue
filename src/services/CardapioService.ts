@@ -1,6 +1,7 @@
 import type { Cardapio, Produto } from '@/types/global'
 import { doc, getDoc, writeBatch } from 'firebase/firestore'
 
+import { isDevelopment } from '@/utils/Utils'
 import { LojistaService } from './LojistaService' // Importa o serviço de Lojista
 import { db } from './firebaseConfig'
 
@@ -24,17 +25,6 @@ export class CardapioService {
    */
   async salvarCardapio(cardapio: Cardapio): Promise<void> {
     try {
-      const batch = writeBatch(db)
-
-      // 1. Salvar dados do Lojista (separando responsabilidade)
-      const lojistaData = {
-        nomeLoja: cardapio.nomeLoja,
-        fotoUrl: cardapio.fotoUrl,
-        whatsapp: cardapio.whatsapp,
-      }
-      // Reutiliza o método do LojistaService para salvar os metadados
-      await this.lojistaService.salvarLojista(cardapio.id, lojistaData)
-
       // 2. Salvar dados do Cardápio (Produtos)
       const cardapioRef = this.getCardapioRef(cardapio.id)
       const cardapioData: CardapioData = {
@@ -67,8 +57,20 @@ export class CardapioService {
       const lojistaData = await this.lojistaService.getLojista(lojaId)
 
       if (!lojistaData) {
-        console.log('Loja não encontrada!')
-        return null
+        if (isDevelopment) {
+          let lojistaTeste = new LojistaService()
+          const id = lojistaTeste.criarLojista({
+            nomeLoja: 'Minha Lanchonete',
+            whatsapp: '12345678910',
+            fotoUrl:
+              'https://imgs.search.brave.com/O5qNuh8PhkLBkLR4aAYXUgc_Z1SCMyBJ2jOvBy83llg/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zdDIu/ZGVwb3NpdHBob3Rv/cy5jb20vMTA0NjUz/NS84MjMyL2kvNDUw/L2RlcG9zaXRwaG90/b3NfODIzMjA0NDgt/c3RvY2stcGhvdG8t/c2FsZXNtYW4tbWFr/aW5nLWhvdGRvZy1p/bi1mYXN0LmpwZw',
+          })
+
+          console.log('criado: ' + id)
+          console.log(id)
+        }
+
+        throw new Error('Loja não encontrada!')
       }
 
       // 2. Obter lista de Produtos

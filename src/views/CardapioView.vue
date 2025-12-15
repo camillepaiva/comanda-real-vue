@@ -2,7 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 // Importações de tipagem e serviços (assumindo que o caminho é src/services/dbService, etc.)
-import { getCardapio } from '@/services/CardapioService'
+import { CardapioService } from '@/services/CardapioService'
 import type { Cardapio } from '@/types/global'
 import MenuDisplay from '../components/MenuDisplay.vue'
 
@@ -18,10 +18,12 @@ const loading = ref(true)
 const loadCardapio = async (lojaId: string) => {
   loading.value = true
   try {
-    const data = await getCardapio(lojaId)
+    const cardapioService = new CardapioService()
+    const data = await cardapioService.getCardapio(lojaId)
     cardapio.value = data
-  } catch (error) {
+  } catch (error: any) {
     console.error(error)
+    alert(error.message)
   } finally {
     loading.value = false
   }
