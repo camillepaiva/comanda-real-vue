@@ -17,7 +17,7 @@ const message = ref('')
 
 // Inicialização do estado base da loja
 const cardapio = ref<Cardapio>({
-  id: 'loja_teste_1',
+  id: 'TESTE_DEV_LOJA',
   nomeLoja: 'Minha Loja',
   produtos: [],
 })
