@@ -1,7 +1,7 @@
 import { getApp, getApps, initializeApp } from 'firebase/app'
+import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore' // Importe connectFirestoreEmulator
 
-import { getFirestore } from 'firebase/firestore'
-
+// 1. Defina a configuração
 const firebaseConfig = {
   // Use import.meta.env e o prefixo VITE_
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -13,8 +13,22 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 }
 
-// Initialize Firebase (Singleton pattern)
+// 2. Inicialize o App (Singleton pattern)
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
 const db = getFirestore(app)
 
-export { db }
+// 3. Lógica para usar o Emulador (Ambiente de Desenvolvimento)
+// O Vite expõe o modo de ambiente em import.meta.env.MODE.
+// No desenvolvimento local (ex: 'npm run dev'), o MODE geralmente é 'development'.
+const isDevelopment = import.meta.env.MODE === 'development'
+
+if (isDevelopment) {
+  // Verifique se o Emulador está disponível e conecte-se a ele.
+  // A porta padrão para o Firestore Emulator é 8080.
+  console.log(
+    'Ambiente de desenvolvimento detectado. Conectando-se ao Firestore Emulator na porta 8080.',
+  )
+  connectFirestoreEmulator(db, 'localhost', 8080)
+}
+
+export { app, db } // É bom exportar 'app' também, caso precise de outros serviços.
