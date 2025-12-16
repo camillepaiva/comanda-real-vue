@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import CardapioView from '@/views/CardapioView.vue'
+import CardapioView from '@/views/usuario/CardapioView.vue'
 import PainelView from '@/views/PainelView.vue'
 
 const router = createRouter({
